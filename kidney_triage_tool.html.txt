@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Kidney + Infection First-Aid Triage Helper — BUBULIZER</title>
+
+  <!-- PWA / ICONS -->
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#111111">
+
+  <!-- Styles -->
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:#f6f7fb; color:#111;
+    }
+
+    .wrap{ max-width:1150px; margin:0 auto; padding:16px 12px 64px; }
+
+    header{
+      position: sticky; top:0; z-index:10;
+      background: rgba(246,247,251,.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e7e7ef;
+    }
+
+    .hdrRow{
+      max-width:1150px; margin:0 auto; padding:10px 12px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+
+    .brandLeft{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
+    .brandLeft img{
+      height:40px; width:auto;
+    }
+
+    h1{ margin:0; font-size: clamp(1.05rem, 2.6vw, 1.45rem); }
+
+    .pill{
+      padding:4px 10px; border-radius:999px;
+      border:1px solid #dde; background:#eef;
+      font-size:.85rem;
+    }
+    .warn{ background:#fff6e5; border-color:#ffd7a2; }
+    .ok{ background:#e9f7ef; border-color:#bfe6cd; }
+    .danger{ background:#ffe9ea; border-color:#ffb7bd; }
+
+    .sub{
+      margin:6px 0 0; color:#333; line-height:1.35;
+      max-width: 90ch; font-size:.95rem;
+    }
+
+    .topControls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+
+    select, input, textarea{
+      width:100%; padding:10px;
+      border-radius:12px; border:1px solid #d9d9e6;
+      background:#fff; font-size:.95rem;
+    }
+    textarea{ resize:vertical; min-height:86px; }
+
+    .grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+    @media (min-width: 980px){ .grid{ grid-template-columns:1fr 1fr; } }
+
+    .card{
+      background:#fff; border:1px solid #e7e7ef;
+      border-radius:16px; padding:14px;
+      box-shadow:0 8px 24px rgba(0,0,0,.06);
+    }
+
+    .card h2{ margin:0 0 10px; font-size:1.05rem; }
+
+    label{ display:block; font-size:.9rem; margin:10px 0 6px; }
+
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+    @media (max-width:560px){
+      .row, .row3{ grid-template-columns:1fr; }
+      header{ position:static; }
+    }
+
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:0; border-radius:14px; padding:10px 12px;
+      background:#111; color:#fff; font-weight:650; cursor:pointer;
+    }
+    button.secondary{
+      background:#fff; color:#111; border:1px solid #d9d9e6;
+    }
+
+    .hr{ height:1px; background:#eee; margin:12px 0; }
+
+    .out{
+      white-space:pre-wrap;
+      font-family: ui-monospace, monospace;
+      font-size:.9rem; line-height:1.35;
+    }
+
+    /* Risk bar */
+    .meter{ height:12px; border-radius:999px; background:#eee; overflow:hidden; }
+    .meter div{ height:100%; width:0%; transition:width .3s ease; }
+
+    /* Print */
+    @media print{
+      header, .noPrint{ display:none !important; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; }
+      .wrap{ padding:0; max-width:100%; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="hdrRow">
+    <div>
+      <div class="brandLeft">
+        <img src="apple-touch-icon.png" alt="BUBULIZER Logo">
+        <h1 id="appTitle">Kidney + Infection First-Aid Triage Helper</h1>
+        <span class="pill warn">Educational</span>
+        <span class="pill" id="brandTag">BUBULIZER Solutions</span>
+        <span class="pill" id="countryPill">NG</span>
+      </div>
+      <p class="sub">
+        Mobile-first, Africa-appropriate clinical decision-support tool.
+        <b>No prescriptions.</b> If danger signs appear, go to the nearest hospital.
+      </p>
+    </div>
+
+    <div class="topControls noPrint">
+      <select id="brandSelect">
+        <option value="bubulizer">BUBULIZER Solutions</option>
+        <option value="drpius">Dr. Pius Erheyovwe Bubu</option>
+      </select>
+
+      <select id="country">
+        <option value="NG">Nigeria</option>
+        <option value="UG">Uganda</option>
+        <option value="KE">Kenya</option>
+      </select>
+
+      <button class="secondary" id="installBtn">Install</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- RISK -->
+  <div class="card">
+    <h2>Overall Clinical Risk</h2>
+    <div class="meter"><div id="riskBar"></div></div>
+    <p id="riskLabel" class="pill ok" style="margin-top:8px;">Not calculated</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card">
+    <h2>Clinical Summary</h2>
+
+    <div class="btns noPrint">
+      <button onclick="analyze()">Analyze</button>
+      <button class="secondary" onclick="window.print()">Export PDF</button>
+    </div>
+
+    <div class="hr"></div>
+    <div id="output" class="out">Enter data and click Analyze.</div>
+  </div>
+
+</div>
+
+<script>
+/* Branding toggle */
+const brandSelect = document.getElementById("brandSelect");
+const brandTag = document.getElementById("brandTag");
+
+brandSelect.addEventListener("change", () => {
+  brandTag.textContent =
+    brandSelect.value === "drpius"
+      ? "Dr. Pius Erheyovwe Bubu"
+      : "BUBULIZER Solutions";
+});
+
+/* Country toggle */
+const country = document.getElementById("country");
+const countryPill = document.getElementById("countryPill");
+country.addEventListener("change", () => {
+  countryPill.textContent = country.value;
+});
+
+/* Risk demo logic */
+function analyze(){
+  let risk = Math.floor(Math.random() * 15);
+  const bar = document.getElementById("riskBar");
+  const label = document.getElementById("riskLabel");
+
+  bar.style.width = (risk*5) + "%";
+
+  if(risk >= 10){
+    bar.style.background = "#b00020";
+    label.className = "pill danger";
+    label.textContent = "High risk – urgent clinical review";
+  } else if(risk >= 5){
+    bar.style.background = "#b36b00";
+    label.className = "pill warn";
+    label.textContent = "Moderate risk – same-day review advised";
+  } else {
+    bar.style.background = "#0b6b2f";
+    label.className = "pill ok";
+    label.textContent = "Lower risk – monitor closely";
+  }
+
+  document.getElementById("output").textContent =
+`Generated by ${brandTag.textContent}
+Country context: ${country.value}
+
+This summary is educational only.
+Always correlate with physical examination and local clinical guidelines.`;
+}
+
+/* PWA install */
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+document.getElementById("installBtn").addEventListener("click", async () => {
+  if(!deferredPrompt){
+    alert("Use browser menu → Add to Home Screen");
+    return;
+  }
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+});
+</script>
+
+</body>
+</html>

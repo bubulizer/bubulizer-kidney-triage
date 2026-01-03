@@ -1,0 +1,22 @@
+{
+  "name": "bubulizer-kidney-triage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BUBULIZER Solutions \u2014 Kidney + Infection First-Aid Triage Helper (Capacitor native shell)",
+  "scripts": {
+    "start": "npx http-server ./www -p 5173 -c-1",
+    "cap:init": "npx cap init \"BUBULIZER Kidney Triage\" \"com.bubulizer.kidneytriage\" --web-dir=www",
+    "cap:add:ios": "npx cap add ios",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.0",
+    "http-server": "^14.1.1"
+  }
+}

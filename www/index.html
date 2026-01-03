@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kidney + Infection First-Aid Triage Helper — BUBULIZER</title>
+
+  <!-- PWA / ICONS (provided files) -->
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#111111">
+
+  <!-- iOS install / splash friendliness -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kidney Triage">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="appHeader">
+    <div class="hdrInner">
+      <div class="brand">
+        <img class="brandLogo" src="apple-touch-icon.png" alt="BUBULIZER Logo">
+        <div class="brandText">
+          <div class="titleRow">
+            <h1 id="appTitle">Kidney + Infection First‑Aid Triage Helper</h1>
+            <span class="chip chip-warn">Educational</span>
+            <span class="chip" id="countryPill">NG</span>
+          </div>
+          <p class="subtitle">
+            Mobile‑first, Africa‑appropriate decision‑support. No prescriptions. If danger signs show up, go to a hospital — immediately.
+          </p>
+        </div>
+      </div>
+
+      <div class="controls noPrint">
+        <div class="ctrl">
+          <label>Brand</label>
+          <select id="brandSelect">
+            <option value="bubulizer">BUBULIZER Solutions</option>
+            <option value="drpius">Dr. Pius Erheyovwe Bubu</option>
+          </select>
+        </div>
+
+        <div class="ctrl">
+          <label>Country</label>
+          <select id="country">
+            <option value="NG">Nigeria</option>
+            <option value="UG">Uganda</option>
+            <option value="KE">Kenya</option>
+          </select>
+        </div>
+
+        <div class="ctrl">
+          <label>Mode</label>
+          <select id="mode">
+            <option value="patient">Patient mode</option>
+            <option value="doctor">Doctor mode</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary" id="installBtn" title="Install (Add to Home Screen)">Install</button>
+      </div>
+    </div>
+
+    <nav class="tabs noPrint" aria-label="App sections">
+      <button class="tab active" data-tab="triage">Triage</button>
+      <button class="tab" data-tab="timeline">Timeline</button>
+      <button class="tab" data-tab="report">Report</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- ===== TRIAGE ===== -->
+    <section class="panel show" id="tab-triage">
+      <div class="grid">
+        <div class="card">
+          <h2>Patient & Symptoms</h2>
+
+          <div class="row">
+            <div>
+              <label>Age (years)</label>
+              <input id="age" type="number" min="0" placeholder="e.g., 60">
+            </div>
+            <div>
+              <label>Sex</label>
+              <select id="sex">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Symptoms (tick all that apply)</label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="sx_fever"> Fever / chills</label>
+            <label class="check"><input type="checkbox" id="sx_lowbp"> Dizziness / fainting</label>
+            <label class="check"><input type="checkbox" id="sx_sob"> Shortness of breath</label>
+            <label class="check"><input type="checkbox" id="sx_confusion"> Confusion</label>
+            <label class="check"><input type="checkbox" id="sx_itch"> Itching</label>
+            <label class="check"><input type="checkbox" id="sx_rash"> Rash / swelling</label>
+            <label class="check"><input type="checkbox" id="sx_insomnia"> Insomnia</label>
+            <label class="check"><input type="checkbox" id="sx_urine"> Reduced urine / dark urine</label>
+            <label class="check"><input type="checkbox" id="sx_pain"> Severe pain</label>
+            <label class="check"><input type="checkbox" id="sx_ed"> Erectile issues</label>
+          </div>
+
+          <label>Notes (timeline, drugs, herbs, allergies)</label>
+          <textarea id="notes" placeholder="Example: itching improved; poor sleep; took antibiotics last week; used herbal mixture; any drug allergy?"></textarea>
+
+          <div class="callout warn">
+            <b>Emergency signs:</b> persistent high fever, confusion, fainting/very low BP, breathing difficulty, swelling of lips/tongue, chest pain, very low urine output, rapidly spreading rash.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Vitals (Optional, High-Value)</h2>
+          <div class="row3">
+            <div><label>Temperature (°C)</label><input id="temp" type="number" step="0.1" placeholder="36.8"></div>
+            <div><label>Blood Pressure (mmHg)</label><input id="bp" placeholder="120/80"></div>
+            <div><label>Heart Rate (bpm)</label><input id="hr" type="number" placeholder="78"></div>
+          </div>
+          <div class="row3">
+            <div><label>Respiratory Rate (/min)</label><input id="rr" type="number" placeholder="16"></div>
+            <div><label>Oxygen Saturation (%)</label><input id="spo2" type="number" placeholder="98"></div>
+            <div class="doctorOnly"><label>Weight (kg)</label><input id="weight" type="number" step="0.1" placeholder="optional"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <h2>Risk score (educational)</h2>
+          <div class="riskBox">
+            <div class="riskTop">
+              <div>
+                <div class="riskLabel" id="riskLabel">Not calculated</div>
+                <div class="muted">0–4 low • 5–9 moderate • 10+ high</div>
+              </div>
+              <div class="chip" id="riskPoints">0 / 20</div>
+            </div>
+            <div class="meter" aria-label="Risk score bar">
+              <div id="riskBar"></div>
+            </div>
+            <div class="tiny">
+              Conservative screening score (vitals + kidney + inflammation + culture signals). Not a diagnosis.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Labs (Kidney / CBC / Electrolytes)</h2>
+
+          <div class="row">
+            <div><label>eGFR (mL/min/1.73m²)</label><input id="egfr" type="number" step="0.1" placeholder="e.g., 84"></div>
+            <div><label>Creatinine (mg/dL)</label><input id="creat" type="number" step="0.01" placeholder="e.g., 1.10"></div>
+          </div>
+
+          <div class="row">
+            <div><label>Urea (mg/dL)</label><input id="urea" type="number" step="0.1" placeholder="e.g., 14.4"></div>
+            <div><label>Bicarbonate (mmol/L)</label><input id="bicarb" type="number" step="0.1" placeholder="e.g., 20"></div>
+          </div>
+
+          <div class="row">
+            <div><label>WBC (×10⁹/L)</label><input id="wbc" type="number" step="0.1" placeholder="e.g., 7.6"></div>
+            <div><label>Hemoglobin (g/dL)</label><input id="hb" type="number" step="0.1" placeholder="e.g., 13.0"></div>
+          </div>
+
+          <div class="row">
+            <div><label>Platelets (×10⁹/L)</label><input id="plt" type="number" step="1" placeholder="e.g., 299"></div>
+            <div><label>Eosinophils (%)</label><input id="eos" type="number" step="0.1" placeholder="e.g., 7.0"></div>
+          </div>
+
+          <div class="row3 doctorOnly">
+            <div><label>Sodium (mmol/L)</label><input id="na" type="number" step="0.1" placeholder="136.6"></div>
+            <div><label>Potassium (mmol/L)</label><input id="k" type="number" step="0.01" placeholder="3.91"></div>
+            <div><label>Chloride (mmol/L)</label><input id="cl" type="number" step="0.1" placeholder="102.5"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row doctorOnly">
+            <div><label>CRP (mg/L)</label><input id="crp" type="number" step="0.1" placeholder="e.g., 5"></div>
+            <div><label>Procalcitonin (ng/mL)</label><input id="pct" type="number" step="0.01" placeholder="e.g., 0.08"></div>
+          </div>
+
+          <div class="row doctorOnly">
+            <div><label>Urine ACR (mg/g)</label><input id="acr" type="number" step="0.1" placeholder="e.g., 12"></div>
+            <div>
+              <label>Urine dip (protein / blood)</label>
+              <div class="row2">
+                <select id="u_protein">
+                  <option value="">Protein</option>
+                  <option>Negative</option><option>Trace</option><option>+</option><option>++</option><option>+++</option>
+                </select>
+                <select id="u_blood">
+                  <option value="">Blood</option>
+                  <option>Negative</option><option>Trace</option><option>+</option><option>++</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row doctorOnly">
+            <div><label>Total Bilirubin (mg/dL)</label><input id="bili" type="number" step="0.01" placeholder="e.g., 0.8"></div>
+            <div><label>ALP (U/L)</label><input id="alp" type="number" placeholder="e.g., 90"></div>
+          </div>
+
+          <label class="doctorOnly">ALT / AST (U/L)</label>
+          <input class="doctorOnly" id="altast" placeholder="e.g., 22 / 24">
+
+          <div class="hr"></div>
+
+          <h3 class="h3">Blood culture follow-up</h3>
+          <label>Organism (as reported)</label>
+          <input id="org" placeholder="e.g., Staphylococcus spp.">
+
+          <div class="row">
+            <div>
+              <label>Repeated?</label>
+              <select id="bc_repeat">
+                <option value="">—</option>
+                <option>No</option>
+                <option>Yes – still positive</option>
+                <option>Yes – now negative</option>
+              </select>
+            </div>
+            <div>
+              <label>Speciation</label>
+              <select id="bc_spec">
+                <option value="">—</option>
+                <option>Not speciated</option>
+                <option>Staphylococcus aureus</option>
+                <option>Coagulase-negative Staph (CoNS)</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="doctorOnly">Antibiogram (paste S/R summary if available)</label>
+          <textarea class="doctorOnly" id="abx" placeholder="Sensitive: ... Resistant: ..."></textarea>
+
+          <div class="callout" id="countryHints"></div>
+        </div>
+
+        <div class="card">
+          <h2>Actions</h2>
+          <div class="btnRow noPrint">
+            <button class="btn" id="analyzeBtn">Analyze</button>
+            <button class="btn btn-secondary" id="savePointBtn">Save this as a timeline point</button>
+            <button class="btn btn-secondary" id="copyBtn">Copy summary</button>
+            <button class="btn btn-secondary" id="pdfBtn">Export PDF</button>
+            <button class="btn btn-ghost" id="demoBtn">Load demo</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="stack">
+            <div class="muted"><b>Badges</b></div>
+            <div id="badges"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="stack">
+            <div class="muted"><b>Generated summary</b></div>
+            <div id="output" class="out">Enter data → Analyze.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TIMELINE ===== -->
+    <section class="panel" id="tab-timeline">
+      <div class="grid2">
+        <div class="card">
+          <h2>Timeline</h2>
+          <div class="tiny muted">Store multiple readings and see trends (works offline).</div>
+
+          <div class="btnRow noPrint" style="margin-top:10px;">
+            <button class="btn btn-secondary" id="exportTimelineBtn">Export timeline (JSON)</button>
+            <button class="btn btn-secondary" id="importTimelineBtn">Import timeline (JSON)</button>
+            <button class="btn btn-ghost" id="clearTimelineBtn">Clear timeline</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <div id="timelineList" class="timelineList"></div>
+        </div>
+
+        <div class="card">
+          <h2>Trend plots</h2>
+          <div class="tiny muted">eGFR / Creatinine / CRP / Risk (if available)</div>
+
+          <div class="plot">
+            <canvas id="trendCanvas" width="900" height="420" aria-label="Trend plot"></canvas>
+          </div>
+
+          <div class="hr"></div>
+          <div class="tiny">
+            Tip: for serious illness, trends matter more than one number. Your kidneys didn’t read the textbook either.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REPORT ===== -->
+    <section class="panel" id="tab-report">
+      <div class="card">
+        <h2>Printable report</h2>
+        <div class="tiny muted">This section prints nicely to PDF. It uses your latest analyzed summary.</div>
+
+        <div class="btnRow noPrint" style="margin-top:10px;">
+          <button class="btn btn-secondary" id="printReportBtn">Print / PDF</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="reportArea" class="reportArea">
+          <div class="reportHeader">
+            <img src="apple-touch-icon.png" class="reportLogo" alt="Logo">
+            <div>
+              <div class="reportTitle" id="reportTitle">BUBULIZER Solutions</div>
+              <div class="tiny muted" id="reportMeta">Kidney + Infection First‑Aid Triage Helper (Educational)</div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div id="reportSummary" class="out">Run Analyze in the Triage tab to populate this report.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section class="panel" id="tab-settings">
+      <div class="grid2">
+        <div class="card">
+          <h2>Local encrypted storage</h2>
+          <p class="tiny">
+            Your data stays on <b>your device</b>. Enter a passphrase to encrypt saved forms/timeline. If you forget it, nobody can decrypt it. Traditional physics: entropy wins.
+          </p>
+
+          <label>Passphrase</label>
+          <input id="passphrase" type="password" placeholder="Min 6 chars">
+
+          <div class="btnRow noPrint">
+            <button class="btn btn-secondary" id="saveEncBtn">Save form (encrypted)</button>
+            <button class="btn btn-secondary" id="loadEncBtn">Load form (encrypted)</button>
+            <button class="btn btn-ghost" id="clearEncBtn">Clear saved</button>
+          </div>
+
+          <div class="hr"></div>
+          <div class="tiny muted">
+            Encrypted saves use AES‑GCM + PBKDF2 (150k iterations). Good enough for a phone; still: choose a real passphrase.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Optional GPT bridge</h2>
+          <p class="tiny">
+            For production, don’t call GPT directly from the browser. Use a backend proxy so you don’t leak secrets.
+            This app ships with a <b>client hook</b> (gpt-bridge.js) that calls <code>/api/gpt</code>.
+          </p>
+
+          <div class="row">
+            <div>
+              <label>Enable GPT proxy calls</label>
+              <select id="gptEnabled">
+                <option value="no">No</option>
+                <option value="yes">Yes (proxy)</option>
+              </select>
+            </div>
+            <div>
+              <label>Proxy endpoint</label>
+              <input id="gptEndpoint" value="/api/gpt">
+            </div>
+          </div>
+
+          <div class="btnRow noPrint">
+            <button class="btn btn-secondary" id="askGptBtn">Ask GPT (via proxy)</button>
+          </div>
+
+          <div class="hr"></div>
+          <div id="gptReply" class="out tiny">GPT reply will appear here (if enabled).</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="tiny">
+      © <span id="year"></span> <span id="footerBrand">BUBULIZER Solutions</span> • Educational tool • Not medical care.
+    </div>
+  </footer>
+
+  <script src="charts.js"></script>
+  <script src="timeline.js"></script>
+  <script src="gpt-bridge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

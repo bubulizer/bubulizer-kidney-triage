@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Kidney + Infection First-Aid Triage Helper — BUBULIZER</title>
+
+  <!-- PWA / ICONS (files must exist beside this HTML) -->
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- iOS splash screen hooks (optional; add real files + correct media queries) -->
+  <!-- Example:
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+  -->
+
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:#f6f7fb; color:#111;
+    }
+
+    header{
+      position: sticky; top:0; z-index:10;
+      background: rgba(246,247,251,.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e7e7ef;
+    }
+    .hdrRow{
+      max-width:1180px; margin:0 auto; padding:10px 12px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    .brandLeft{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .brandLeft img{ height:40px; width:auto; border-radius:10px; }
+    h1{ margin:0; font-size: clamp(1.05rem, 2.6vw, 1.45rem); }
+
+    .pill{
+      padding:4px 10px; border-radius:999px;
+      border:1px solid #dde; background:#eef;
+      font-size:.85rem;
+    }
+    .warn{ background:#fff6e5; border-color:#ffd7a2; }
+    .ok{ background:#e9f7ef; border-color:#bfe6cd; }
+    .danger{ background:#ffe9ea; border-color:#ffb7bd; }
+
+    .sub{
+      margin:6px 0 0; color:#333; line-height:1.35;
+      max-width: 95ch; font-size:.95rem;
+    }
+
+    .topControls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:end;
+    }
+    .ctrl{ min-width: 160px; }
+    .ctrl label{ display:block; font-size:.8rem; margin:0 0 6px; color:#333; }
+
+    select, input, textarea{
+      width:100%; padding:10px;
+      border-radius:12px; border:1px solid #d9d9e6;
+      background:#fff; font-size:.95rem;
+    }
+    textarea{ resize:vertical; min-height:86px; }
+
+    .wrap{ max-width:1180px; margin:0 auto; padding:12px 12px 72px; }
+    .grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+    @media (min-width: 980px){ .grid{ grid-template-columns:1fr 1fr; } }
+
+    .card{
+      background:#fff; border:1px solid #e7e7ef;
+      border-radius:16px; padding:14px;
+      box-shadow:0 8px 24px rgba(0,0,0,.06);
+    }
+    .card h2{ margin:0 0 10px; font-size:1.05rem; }
+    label{ display:block; font-size:.9rem; margin:10px 0 6px; color:#222; }
+
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    @media (max-width:560px){
+      .row, .row3{ grid-template-columns:1fr; }
+      header{ position:static; }
+    }
+
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:0; border-radius:14px; padding:10px 12px;
+      background:#111; color:#fff; font-weight:650; cursor:pointer;
+    }
+    button.secondary{ background:#fff; color:#111; border:1px solid #d9d9e6; }
+    button.ghost{ background:transparent; color:#111; border:1px dashed #d9d9e6; }
+
+    .hr{ height:1px; background:#eee; margin:12px 0; }
+    .tiny{ font-size:.85rem; color:#444; line-height:1.35; }
+
+    .out{
+      white-space:pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:.9rem; line-height:1.35;
+    }
+
+    /* Risk bar */
+    .meter{ height:12px; border-radius:999px; background:#eee; overflow:hidden; border:1px solid #e3e3ea; }
+    .meter div{ height:100%; width:0%; transition:width .25s ease; background:#111; }
+
+    .modeBadge{ font-weight:700; }
+
+    /* Patient-mode hiding */
+    .patientHide{ display:none; }
+    .patientMode .doctorOnly{ display:none !important; }
+    .doctorMode .patientOnly{ display:none !important; }
+
+    /* Timeline chart */
+    canvas{ width:100%; height:220px; border:1px solid #e7e7ef; border-radius:14px; background:#fff; }
+
+    /* Print */
+    @media print{
+      header, .noPrint{ display:none !important; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; }
+      .wrap{ padding:0; max-width:100%; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hdrRow">
+    <div>
+      <div class="brandLeft">
+        <img src="apple-touch-icon.png" alt="BUBULIZER Logo">
+        <h1 id="appTitle">Kidney + Infection First-Aid Triage Helper</h1>
+        <span class="pill warn">Educational</span>
+        <span class="pill" id="brandTag">BUBULIZER Solutions</span>
+        <span class="pill" id="countryPill">NG</span>
+        <span class="pill modeBadge" id="modePill">Patient mode</span>
+      </div>
+      <p class="sub" id="subtitle">
+        Mobile-first, Africa-appropriate clinical decision-support tool.
+        <b>No prescriptions.</b> If danger signs appear, go to the nearest hospital.
+      </p>
+    </div>
+
+    <div class="topControls noPrint">
+      <div class="ctrl">
+        <label>Brand</label>
+        <select id="brandSelect">
+          <option value="bubulizer">BUBULIZER Solutions</option>
+          <option value="drpius">Dr. Pius Erheyovwe Bubu</option>
+        </select>
+      </div>
+
+      <div class="ctrl">
+        <label>Country</label>
+        <select id="country">
+          <option value="NG">Nigeria (NG)</option>
+          <option value="UG">Uganda (UG)</option>
+          <option value="KE">Kenya (KE)</option>
+        </select>
+      </div>
+
+      <div class="ctrl">
+        <label>Mode</label>
+        <select id="modeSelect">
+          <option value="patient">Patient</option>
+          <option value="doctor">Doctor</option>
+        </select>
+      </div>
+
+      <div class="btns" style="margin:0;">
+        <button class="secondary" id="installBtn">Install</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="appRoot">
+
+  <!-- RISK -->
+  <div class="card">
+    <h2>Overall Clinical Risk (screening)</h2>
+    <div class="meter" aria-label="Risk bar"><div id="riskBar"></div></div>
+    <div class="row" style="margin-top:10px;">
+      <div><span class="pill" id="riskPoints">0 / 20</span></div>
+      <div style="text-align:right;"><span class="pill ok" id="riskLabel">Not calculated</span></div>
+    </div>
+    <p class="tiny" id="riskExplainer">
+      This score is a conservative urgency screen (vitals + kidney + infection markers + culture context). It is <b>not</b> a diagnosis.
+    </p>
+  </div>
+
+  <div class="grid">
+
+    <!-- PATIENT -->
+    <div class="card">
+      <h2>Patient & Symptoms</h2>
+      <div class="row">
+        <div>
+          <label>Age (years)</label>
+          <input id="age" type="number" min="0" value="60">
+        </div>
+        <div>
+          <label>Sex</label>
+          <select id="sex">
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Symptoms (tick all that apply)</label>
+      <div class="row3">
+        <label><input type="checkbox" id="sx_fever"> Fever / chills</label>
+        <label><input type="checkbox" id="sx_lowbp"> Dizziness / fainting</label>
+        <label><input type="checkbox" id="sx_sob"> Shortness of breath</label>
+        <label><input type="checkbox" id="sx_confusion"> Confusion</label>
+        <label><input type="checkbox" id="sx_itch"> Itching</label>
+        <label><input type="checkbox" id="sx_rash"> Rash / swelling</label>
+        <label><input type="checkbox" id="sx_insomnia"> Insomnia</label>
+        <label><input type="checkbox" id="sx_urine"> Reduced urine / dark urine</label>
+        <label><input type="checkbox" id="sx_pain"> Severe pain</label>
+        <label class="doctorOnly"><input type="checkbox" id="sx_ed"> Erectile issues</label>
+      </div>
+
+      <label>Notes (timeline, drugs, herbs, allergies)</label>
+      <textarea id="notes" placeholder="Example: itching improved; poor sleep; took antibiotics last week; used herbal mixture; any drug allergy?"></textarea>
+
+      <div class="hr"></div>
+      <p class="tiny">
+        ⚠️ Emergency signs: persistent high fever, confusion, fainting/very low BP, breathing difficulty,
+        swelling of lips/tongue, chest pain, very low urine output, rapidly spreading rash.
+      </p>
+    </div>
+
+    <!-- VITALS -->
+    <div class="card">
+      <h2>Vital Signs</h2>
+      <div class="row3">
+        <div><label>Temperature (°C)</label><input id="temp" type="number" step="0.1" placeholder="e.g., 36.8"></div>
+        <div><label>Blood Pressure (mmHg)</label><input id="bp" placeholder="e.g., 120/80"></div>
+        <div><label>Heart Rate (bpm)</label><input id="hr" type="number" placeholder="e.g., 78"></div>
+      </div>
+      <div class="row3">
+        <div><label>Respiratory Rate (/min)</label><input id="rr" type="number" placeholder="e.g., 16"></div>
+        <div><label>Oxygen Saturation (%)</label><input id="spo2" type="number" placeholder="e.g., 98"></div>
+      </div>
+
+      <div class="hr"></div>
+      <p class="tiny doctorOnly" id="countryHints"></p>
+      <p class="tiny patientOnly">
+        If you don’t know these numbers, it’s okay. The tool still works — but vitals make it smarter.
+      </p>
+    </div>
+
+    <!-- LABS: KIDNEY + CBC -->
+    <div class="card">
+      <h2>Blood & Kidney Labs</h2>
+
+      <div class="row">
+        <div><label>eGFR (mL/min/1.73m²)</label><input id="egfr" type="number" step="0.1" placeholder="e.g., 84"></div>
+        <div><label>Creatinine (mg/dL)</label><input id="creat" type="number" step="0.01" placeholder="e.g., 1.10"></div>
+      </div>
+
+      <div class="row doctorOnly">
+        <div><label>Urea (mg/dL)</label><input id="urea" type="number" step="0.1" placeholder="e.g., 14.4"></div>
+        <div><label>Bicarbonate (mmol/L)</label><input id="bicarb" type="number" step="0.1" placeholder="e.g., 20"></div>
+      </div>
+
+      <div class="row">
+        <div><label>WBC (×10⁹/L)</label><input id="wbc" type="number" step="0.1" placeholder="e.g., 7.6"></div>
+        <div><label>Hemoglobin (g/dL)</label><input id="hb" type="number" step="0.1" placeholder="e.g., 13.0"></div>
+      </div>
+
+      <div class="row">
+        <div><label>Platelets (×10⁹/L)</label><input id="plt" type="number" step="1" placeholder="e.g., 299"></div>
+        <div><label>Eosinophils (%)</label><input id="eos" type="number" step="0.1" placeholder="e.g., 7.0"></div>
+      </div>
+
+      <div class="row3 doctorOnly">
+        <div><label>Sodium (mmol/L)</label><input id="na" type="number" step="0.1" placeholder="e.g., 136.6"></div>
+        <div><label>Potassium (mmol/L)</label><input id="k" type="number" step="0.01" placeholder="e.g., 3.91"></div>
+        <div><label>Chloride (mmol/L)</label><input id="cl" type="number" step="0.1" placeholder="e.g., 102.5"></div>
+      </div>
+
+      <p class="tiny">
+        eGFR is the “kidney filtering score”. If it’s below 90, it can be mild reduction — trend matters.
+      </p>
+    </div>
+
+    <!-- URINE -->
+    <div class="card">
+      <h2>Urinalysis & Albuminuria</h2>
+      <div class="row3">
+        <div>
+          <label>Urine Protein</label>
+          <select id="u_protein">
+            <option value=""></option>
+            <option>Negative</option><option>Trace</option><option>+</option><option>++</option><option>+++</option>
+          </select>
+        </div>
+        <div>
+          <label>Urine Blood</label>
+          <select id="u_blood">
+            <option value=""></option>
+            <option>Negative</option><option>Trace</option><option>+</option><option>++</option>
+          </select>
+        </div>
+        <div>
+          <label>Urine ACR (mg/g)</label>
+          <input id="acr" type="number" step="0.1" placeholder="e.g., 12">
+        </div>
+      </div>
+      <p class="tiny">
+        ACR ≥ 30 mg/g suggests kidney damage even if eGFR looks “fine”.
+      </p>
+    </div>
+
+    <!-- INFLAMMATION -->
+    <div class="card">
+      <h2>Inflammatory Markers</h2>
+      <div class="row">
+        <div><label>CRP (mg/L)</label><input id="crp" type="number" step="0.1" placeholder="e.g., 5"></div>
+        <div><label>Procalcitonin (ng/mL)</label><input id="pct" type="number" step="0.01" placeholder="e.g., 0.08"></div>
+      </div>
+      <p class="tiny">
+        These help when interpreted with symptoms + vitals. Normal does not always rule out infection.
+      </p>
+    </div>
+
+    <!-- LFT -->
+    <div class="card doctorOnly">
+      <h2>Liver Function (for Itching Workup)</h2>
+      <div class="row3">
+        <div><label>Total Bilirubin (mg/dL)</label><input id="bili" type="number" step="0.01" placeholder="e.g., 0.8"></div>
+        <div><label>ALP (U/L)</label><input id="alp" type="number" placeholder="e.g., 90"></div>
+        <div><label>ALT / AST (U/L)</label><input id="altast" placeholder="e.g., 22 / 24"></div>
+      </div>
+      <p class="tiny">Itching + high ALP/bilirubin can suggest cholestatic pattern → clinician review.</p>
+    </div>
+
+    <!-- BLOOD CULTURE -->
+    <div class="card">
+      <h2>Blood Culture Follow-up</h2>
+
+      <label>Initial organism (as reported)</label>
+      <input id="org" placeholder="e.g., Staphylococcus spp." value="Staphylococcus spp.">
+
+      <div class="row doctorOnly">
+        <div>
+          <label>Was culture repeated?</label>
+          <select id="bc_repeat">
+            <option value=""></option>
+            <option>No</option>
+            <option>Yes – still positive</option>
+            <option>Yes – now negative</option>
+          </select>
+        </div>
+        <div>
+          <label>Speciation (important for Staph)</label>
+          <select id="bc_spec">
+            <option value=""></option>
+            <option>Not speciated</option>
+            <option>Staphylococcus aureus</option>
+            <option>Coagulase-negative Staph (CoNS)</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="doctorOnly">Antibiogram (paste S/R summary if available)</label>
+      <textarea class="doctorOnly" id="abx" placeholder="Sensitive: ... Resistant: ..."></textarea>
+
+      <div class="hr"></div>
+      <p class="tiny">
+        This tool does <b>not</b> prescribe antibiotics. It flags why speciation + repeat cultures matter.
+      </p>
+    </div>
+
+    <!-- TIMELINE + PLOTS -->
+    <div class="card" style="grid-column:1/-1;">
+      <h2>Timeline & Trend Plots</h2>
+
+      <div class="row">
+        <div>
+          <label>Record date</label>
+          <input id="recDate" type="date">
+        </div>
+        <div class="doctorOnly">
+          <label>Label (optional)</label>
+          <input id="recLabel" placeholder="e.g., Day 3 follow-up">
+        </div>
+      </div>
+
+      <div class="btns noPrint">
+        <button class="secondary" id="savePointBtn">Save point to timeline</button>
+        <button class="secondary" id="plotBtn">Update plots</button>
+        <button class="ghost" id="clearTimelineBtn">Clear timeline</button>
+      </div>
+
+      <div class="hr"></div>
+      <canvas id="trendChart" width="900" height="220" aria-label="Trend chart"></canvas>
+      <p class="tiny">
+        Plot shows trends for eGFR, Creatinine, CRP, Procalcitonin when available. Trend beats vibes.
+      </p>
+    </div>
+
+    <!-- STORAGE + GPT PROXY -->
+    <div class="card" style="grid-column:1/-1;">
+      <h2>Storage & Optional GPT Proxy</h2>
+
+      <div class="row">
+        <div>
+          <label>Local encrypted storage passphrase</label>
+          <input id="passphrase" type="password" placeholder="Min 6 chars (you choose)">
+        </div>
+        <div class="doctorOnly">
+          <label>Backend GPT proxy URL (recommended)</label>
+          <input id="proxyUrl" placeholder="e.g., https://your-domain.com/api/gpt-triage">
+        </div>
+      </div>
+
+      <div class="btns noPrint">
+        <button class="secondary" id="saveEncBtn">Save form (Encrypted)</button>
+        <button class="secondary" id="loadEncBtn">Load form (Encrypted)</button>
+        <button class="ghost" id="clearEncBtn">Clear saved</button>
+        <button class="secondary doctorOnly" id="askProxyBtn">Ask GPT via Backend Proxy</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="tiny out" id="proxyReply">Proxy reply appears here (doctor mode only).</div>
+
+      <div class="hr"></div>
+      <p class="tiny">
+        ✅ Best practice: keep GPT keys on a backend proxy (FastAPI/Node). Don’t put API keys in the browser unless you enjoy pain.
+      </p>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card" style="grid-column:1/-1;">
+      <h2>Clinical Summary</h2>
+
+      <div class="btns noPrint" style="margin-top:0;">
+        <button id="analyzeBtn">Analyze</button>
+        <button class="secondary" id="copyBtn">Copy Summary</button>
+        <button class="secondary" id="pdfBtn">Export PDF</button>
+        <button class="secondary" id="loadExampleBtn">Load Example</button>
+        <button class="secondary" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="hr"></div>
+      <div id="output" class="out">Enter data and click Analyze.</div>
+
+      <div class="hr"></div>
+      <p class="tiny">
+        Educational tool. No prescriptions. If high risk or worsening symptoms, go to a hospital.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------
+  // Mode + Branding + Country
+  // ---------------------------
+  function applyBranding() {
+    const v = $("brandSelect").value;
+    if (v === "drpius") {
+      $("brandTag").textContent = "Dr. Pius Erheyovwe Bubu";
+      document.title = "Kidney + Infection First-Aid Triage Helper — Dr. Pius Erheyovwe Bubu";
+    } else {
+      $("brandTag").textContent = "BUBULIZER Solutions";
+      document.title = "Kidney + Infection First-Aid Triage Helper — BUBULIZER";
+    }
+  }
+
+  function countryHintText(country) {
+    const base = `
+<b>Safety-first:</b>
+• Positive blood culture with <b>Staphylococcus spp.</b> needs clinician confirmation of <b>contamination vs true bacteremia</b> (repeat cultures + speciation).
+• <b>Staph aureus</b> bacteremia can be serious → clinician-led management (source control, repeat cultures; echo in some cases).
+• Avoid self-medicating with leftover antibiotics — it drives resistance.`;
+
+    const ng = `
+<b>Nigeria (NG) — resistance hints (non-prescriptive):</b>
+• High OTC antibiotic access can increase resistance pressure → culture-guided therapy matters.
+• “Staph spp.” without speciation is under-specified; request speciation/susceptibility.`;
+
+    const ug = `
+<b>Uganda (UG) — resistance hints (non-prescriptive):</b>
+• Empiric approaches vary by facility; stewardship emphasizes documentation + de-escalation after sensitivities.`;
+
+    const ke = `
+<b>Kenya (KE) — resistance hints (non-prescriptive):</b>
+• Stewardship is growing; avoid unnecessary broad-spectrum use; document source and de-escalate with culture.`;
+
+    return base + "<br><br>" + (country === "NG" ? ng : country === "UG" ? ug : ke);
+  }
+
+  function applyCountry() {
+    const c = $("country").value;
+    $("countryPill").textContent = c;
+    $("countryHints").innerHTML = countryHintText(c);
+  }
+
+  function applyMode() {
+    const mode = $("modeSelect").value;
+    const root = $("appRoot");
+    if (mode === "doctor") {
+      root.classList.remove("patientMode");
+      root.classList.add("doctorMode");
+      $("modePill").textContent = "Doctor mode";
+      $("modePill").className = "pill warn modeBadge";
+      $("subtitle").innerHTML = `Mobile-first, Africa-appropriate clinical decision-support tool. <b>No prescriptions.</b> Doctor mode shows expanded inputs and more technical output.`;
+    } else {
+      root.classList.remove("doctorMode");
+      root.classList.add("patientMode");
+      $("modePill").textContent = "Patient mode";
+      $("modePill").className = "pill ok modeBadge";
+      $("subtitle").innerHTML = `Mobile-first, Africa-appropriate decision-support tool. <b>No prescriptions.</b> Patient mode keeps it simple and safety-focused.`;
+    }
+  }
+
+  // ---------------------------
+  // Clinical logic (educational)
+  // ---------------------------
+  function egfrStage(e) {
+    if (!isFinite(e)) return ["Unknown", "Missing eGFR"];
+    if (e >= 90) return ["G1", "Normal or high (≥90)"];
+    if (e >= 60) return ["G2", "Mildly decreased (60–89)"];
+    if (e >= 45) return ["G3a", "Mild–moderate decrease (45–59)"];
+    if (e >= 30) return ["G3b", "Moderate–severe decrease (30–44)"];
+    if (e >= 15) return ["G4", "Severely decreased (15–29)"];
+    return ["G5", "Kidney failure (<15)"];
+  }
+
+  function parseBP(bpStr) {
+    if (!bpStr) return null;
+    const m = String(bpStr).trim().match(/^(\d{2,3})\s*\/\s*(\d{2,3})$/);
+    if (!m) return null;
+    return { sys: Number(m[1]), dia: Number(m[2]) };
+  }
+
+  function computeRiskScore(d) {
+    // Max 20, conservative urgency screen
+    let pts = 0;
+    const flags = [];
+
+    // vitals
+    if (isFinite(d.temp) && (d.temp >= 38.0 || d.temp <= 36.0)) { pts += 2; flags.push("Abnormal temperature (infection/physiologic stress)."); }
+    if (isFinite(d.hr) && d.hr >= 100) { pts += 2; flags.push("Tachycardia ≥100 (consider sepsis/dehydration/pain)."); }
+    if (isFinite(d.rr) && d.rr >= 22) { pts += 3; flags.push("RR ≥22 (sepsis screen positive)."); }
+    if (isFinite(d.spo2) && d.spo2 > 0 && d.spo2 < 94) { pts += 4; flags.push("SpO₂ <94% (urgent assessment)."); }
+    const bp = parseBP(d.bp);
+    if (bp && bp.sys < 90) { pts += 4; flags.push("Systolic BP <90 (shock risk)."); }
+
+    // kidney
+    if (isFinite(d.egfr)) {
+      if (d.egfr < 30) { pts += 4; flags.push("eGFR <30 (high renal risk)."); }
+      else if (d.egfr < 60) { pts += 2; flags.push("eGFR 30–59 (moderate renal risk)."); }
+      else if (d.egfr < 90) { pts += 1; }
+    }
+
+    // inflammation
+    if (isFinite(d.pct) && d.pct >= 0.5) { pts += 3; flags.push("PCT ≥0.5 supports bacterial infection likelihood (interpret clinically)."); }
+    if (isFinite(d.crp) && d.crp >= 10) { pts += 2; flags.push("CRP elevated (active inflammation/infection possible)."); }
+
+    // culture
+    const org = (d.org || "").toLowerCase();
+    if (org.includes("staph")) pts += 1;
+    if ((d.bc_repeat || "").includes("still positive")) { pts += 3; flags.push("Repeat culture still positive (persistent bacteremia concern)."); }
+    if (d.bc_spec === "Staphylococcus aureus") { pts += 4; flags.push("Staph aureus bacteremia risk (urgent clinician-led management)."); }
+
+    // itch + eos
+    if (d.sx_itch && isFinite(d.eos) && d.eos > 6) { pts += 1; flags.push("Itch + eosinophilia: consider allergy/drug reaction/parasites."); }
+
+    // symptoms red flags
+    if (d.sx_confusion) { pts += 3; flags.push("Confusion is a red flag symptom."); }
+    if (d.sx_lowbp) { pts += 2; }
+    if (d.sx_sob) { pts += 2; }
+
+    pts = Math.max(0, Math.min(20, pts));
+    return { pts, flags };
+  }
+
+  function classifyRisk(pts) {
+    if (pts >= 10) return { label: "High risk – urgent clinical assessment", cls: "danger", color: "#b00020" };
+    if (pts >= 5)  return { label: "Moderate risk – same-day review advised", cls: "warn", color: "#b36b00" };
+    return { label: "Lower risk – monitor and follow clinician guidance", cls: "ok", color: "#0b6b2f" };
+  }
+
+  function setRiskUI(pts) {
+    const r = classifyRisk(pts);
+    $("riskBar").style.width = Math.round((pts/20)*100) + "%";
+    $("riskBar").style.background = r.color;
+    $("riskLabel").className = "pill " + r.cls;
+    $("riskLabel").textContent = r.label;
+    $("riskPoints").textContent = `${pts} / 20`;
+  }
+
+  function collectData() {
+    const mode = $("modeSelect").value;
+
+    return {
+      mode,
+      brand: $("brandSelect").value,
+      country: $("country").value,
+
+      age: Number($("age").value),
+      sex: $("sex").value,
+      notes: $("notes").value.trim(),
+
+      // symptoms
+      sx_fever: $("sx_fever").checked,
+      sx_lowbp: $("sx_lowbp").checked,
+      sx_sob: $("sx_sob").checked,
+      sx_confusion: $("sx_confusion").checked,
+      sx_itch: $("sx_itch").checked,
+      sx_rash: $("sx_rash").checked,
+      sx_insomnia: $("sx_insomnia").checked,
+      sx_urine: $("sx_urine").checked,
+      sx_pain: $("sx_pain").checked,
+      sx_ed: $("sx_ed") ? $("sx_ed").checked : false,
+
+      // vitals
+      temp: Number($("temp").value),
+      bp: $("bp").value.trim(),
+      hr: Number($("hr").value),
+      rr: Number($("rr").value),
+      spo2: Number($("spo2").value),
+
+      // labs
+      egfr: Number($("egfr").value),
+      creat: Number($("creat").value),
+      urea: Number($("urea") ? $("urea").value : ""),
+      bicarb: Number($("bicarb") ? $("bicarb").value : ""),
+      wbc: Number($("wbc").value),
+      hb: Number($("hb").value),
+      plt: Number($("plt").value),
+      eos: Number($("eos").value),
+      na: Number($("na") ? $("na").value : ""),
+      k: Number($("k") ? $("k").value : ""),
+      cl: Number($("cl") ? $("cl").value : ""),
+
+      // urine
+      u_protein: $("u_protein").value,
+      u_blood: $("u_blood").value,
+      acr: Number($("acr").value),
+
+      // inflammation
+      crp: Number($("crp").value),
+      pct: Number($("pct").value),
+
+      // LFT (doctor only)
+      bili: Number($("bili") ? $("bili").value : ""),
+      alp: Number($("alp") ? $("alp").value : ""),
+      altast: $("altast") ? $("altast").value.trim() : "",
+
+      // culture
+      org: $("org").value.trim(),
+      bc_repeat: $("bc_repeat") ? $("bc_repeat").value : "",
+      bc_spec: $("bc_spec") ? $("bc_spec").value : "",
+      abx: $("abx") ? $("abx").value.trim() : ""
+    };
+  }
+
+  function buildSummary(d, risk) {
+    const [stage, stageLabel] = egfrStage(d.egfr);
+    const bp = parseBP(d.bp);
+    const bpText = bp ? `${bp.sys}/${bp.dia}` : (d.bp || "NA");
+
+    const symptoms = [];
+    if (d.sx_fever) symptoms.push("fever/chills");
+    if (d.sx_lowbp) symptoms.push("dizziness/fainting");
+    if (d.sx_sob) symptoms.push("shortness of breath");
+    if (d.sx_confusion) symptoms.push("confusion");
+    if (d.sx_itch) symptoms.push("itching");
+    if (d.sx_rash) symptoms.push("rash/swelling");
+    if (d.sx_insomnia) symptoms.push("insomnia");
+    if (d.sx_urine) symptoms.push("reduced/dark urine");
+    if (d.sx_pain) symptoms.push("severe pain");
+    if (d.mode === "doctor" && d.sx_ed) symptoms.push("erectile issues");
+
+    const symptomText = symptoms.length ? symptoms.join(", ") : "none reported";
+
+    const safety = [];
+    safety.push("• This tool does not prescribe. Use local guidelines + clinician judgement.");
+    if (d.sx_itch) safety.push("• Itching first-aid: moisturize, cool showers, avoid harsh soaps; if swelling of lips/tongue or breathing issues: emergency care.");
+    safety.push("• Kidney safety: avoid unnecessary NSAIDs (e.g., ibuprofen/diclofenac) unless clinician-approved; many antibiotics need renal dose adjustment.");
+    if (d.sx_insomnia) safety.push("• Insomnia: fixed sleep schedule, reduce caffeine after noon, reduce screens before bed; persistent insomnia needs review.");
+    if (d.mode === "doctor" && d.sx_ed) safety.push("• Erectile change can follow illness/stress/sleep; consider BP, glucose/HbA1c, lipids, thyroid/testosterone if persistent.");
+
+    const redFlags = risk.flags.length ? risk.flags.map(x => "• " + x).join("\n") : "• None detected from entered data (still requires clinical judgement).";
+
+    const brandName = d.brand === "drpius" ? "Dr. Pius Erheyovwe Bubu" : "BUBULIZER Solutions";
+
+    if (d.mode === "patient") {
+      // Patient-friendly output
+      return `EDUCATIONAL SUMMARY (Patient mode)
+
+Generated by: ${brandName}
+Country context: ${d.country}
+
+What you entered
+- Age/Sex: ${isFinite(d.age) ? d.age : "?"} / ${d.sex}
+- Symptoms: ${symptomText}
+- Notes: ${d.notes || "NA"}
+
+Key numbers
+- eGFR (kidney filter score): ${isFinite(d.egfr) ? d.egfr : "NA"} → ${stage}
+- Creatinine: ${isFinite(d.creat) ? d.creat : "NA"}
+- WBC: ${isFinite(d.wbc) ? d.wbc : "NA"}
+- CRP: ${isFinite(d.crp) ? d.crp : "NA"}
+- Procalcitonin: ${isFinite(d.pct) ? d.pct : "NA"}
+- Blood culture: ${d.org || "NA"}
+
+Risk screen
+- Score: ${risk.pts}/20 → ${classifyRisk(risk.pts).label}
+
+Urgency signals
+${redFlags}
+
+Safe next steps (non-prescriptive)
+${safety.join("\n")}
+
+If risk is Moderate/High OR symptoms worsen → go to a hospital/clinic today.`;
+    }
+
+    // Doctor mode output
+    return `CASE SUMMARY (Doctor mode; educational decision-support)
+
+Brand: ${brandName}
+Country context: ${d.country}
+
+PATIENT
+- Age/Sex: ${isFinite(d.age) ? d.age : "?"} y/o ${d.sex}
+- Symptoms: ${symptomText}
+- Notes: ${d.notes || "NA"}
+
+VITALS
+- Temp: ${isFinite(d.temp) ? d.temp + " °C" : "NA"}
+- BP: ${bpText}
+- HR: ${isFinite(d.hr) ? d.hr + " bpm" : "NA"}
+- RR: ${isFinite(d.rr) ? d.rr + " /min" : "NA"}
+- SpO₂: ${isFinite(d.spo2) ? d.spo2 + " %" : "NA"}
+
+LABS
+- eGFR: ${isFinite(d.egfr) ? d.egfr : "NA"} → ${stage} (${stageLabel})
+- Creatinine: ${isFinite(d.creat) ? d.creat : "NA"} mg/dL
+- Urea: ${isFinite(d.urea) ? d.urea : "NA"} mg/dL
+- Bicarbonate: ${isFinite(d.bicarb) ? d.bicarb : "NA"} mmol/L
+- CBC: WBC ${isFinite(d.wbc) ? d.wbc : "NA"}; Hb ${isFinite(d.hb) ? d.hb : "NA"}; Plt ${isFinite(d.plt) ? d.plt : "NA"}; Eos ${isFinite(d.eos) ? d.eos : "NA"} %
+- Electrolytes: Na ${isFinite(d.na) ? d.na : "NA"}; K ${isFinite(d.k) ? d.k : "NA"}; Cl ${isFinite(d.cl) ? d.cl : "NA"}
+- Inflammation: CRP ${isFinite(d.crp) ? d.crp : "NA"}; PCT ${isFinite(d.pct) ? d.pct : "NA"}
+- Urine: Protein ${d.u_protein || "NA"}; Blood ${d.u_blood || "NA"}; ACR ${isFinite(d.acr) ? d.acr : "NA"}
+
+LFT (itching workup)
+- Bilirubin ${isFinite(d.bili) ? d.bili : "NA"}; ALP ${isFinite(d.alp) ? d.alp : "NA"}; ALT/AST ${d.altast || "NA"}
+
+BLOOD CULTURE
+- Organism: ${d.org || "NA"}
+- Repeated: ${d.bc_repeat || "NA"}
+- Speciation: ${d.bc_spec || "NA"}
+- Antibiogram: ${d.abx || "NA"}
+
+RISK SCREEN (educational)
+- Score: ${risk.pts}/20 → ${classifyRisk(risk.pts).label}
+
+RED FLAGS / URGENCY SIGNALS
+${redFlags}
+
+NEXT HIGH-VALUE CLINICAL QUESTIONS
+• Repeat cultures? Speciation? Source identification (skin/wound/line/urinary/dental)?
+• Full med/herb exposure + allergies? Recent antibiotic exposure?
+• Trend creatinine/eGFR + urine ACR/protein over time; assess volume status and BP.
+• If pruritus recurs: review drug reaction, consider parasitic causes depending on context, interpret LFT pattern.
+
+SYMPTOM SAFETY NOTES (non-prescriptive)
+${safety.join("\n")}
+
+PROMPT FOR BACKEND GPT (non-prescriptive)
+SYSTEM: You are clinical decision-support. Do not prescribe antibiotics. Provide differential, red flags, and next-step questions, concise, Africa-context.
+USER: Review the case summary above and suggest safe next steps (no prescribing).`;
+  }
+
+  function analyze() {
+    const d = collectData();
+    const risk = computeRiskScore({
+      temp: d.temp, hr: d.hr, rr: d.rr, spo2: d.spo2, bp: d.bp,
+      egfr: d.egfr, crp: d.crp, pct: d.pct,
+      org: d.org, bc_repeat: d.bc_repeat, bc_spec: d.bc_spec,
+      eos: d.eos,
+      sx_itch: d.sx_itch, sx_confusion: d.sx_confusion, sx_lowbp: d.sx_lowbp, sx_sob: d.sx_sob
+    });
+
+    setRiskUI(risk.pts);
+    $("output").textContent = buildSummary(d, risk);
+    return { d, risk };
+  }
+
+  // ---------------------------
+  // Timeline storage + plotting
+  // ---------------------------
+  const TIMELINE_KEY = "kidney_triage_timeline_v1";
+  function getTodayISO() {
+    const x = new Date();
+    const mm = String(x.getMonth()+1).padStart(2,"0");
+    const dd = String(x.getDate()).padStart(2,"0");
+    return `${x.getFullYear()}-${mm}-${dd}`;
+  }
+
+  function loadTimeline() {
+    try {
+      const raw = localStorage.getItem(TIMELINE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+  function saveTimeline(arr) {
+    localStorage.setItem(TIMELINE_KEY, JSON.stringify(arr.slice(-200))); // cap
+  }
+
+  function toNum(v){ return (isFinite(v) ? Number(v) : NaN); }
+
+  function savePoint() {
+    const { d, risk } = analyze();
+    const date = $("recDate").value || getTodayISO();
+    const label = $("recLabel") ? $("recLabel").value.trim() : "";
+
+    const point = {
+      date,
+      label,
+      egfr: toNum(d.egfr),
+      creat: toNum(d.creat),
+      crp: toNum(d.crp),
+      pct: toNum(d.pct),
+      risk: risk.pts
+    };
+
+    const tl = loadTimeline();
+    tl.push(point);
+    tl.sort((a,b)=> String(a.date).localeCompare(String(b.date)));
+    saveTimeline(tl);
+    drawTrends();
+    alert("Saved point to timeline.");
+  }
+
+  function clearTimeline() {
+    localStorage.removeItem(TIMELINE_KEY);
+    drawTrends();
+    alert("Timeline cleared.");
+  }
+
+  function drawTrends() {
+    const canvas = $("trendChart");
+    const ctx = canvas.getContext("2d");
+    const tl = loadTimeline();
+
+    // clear
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // frame
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "#e7e7ef";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5,0.5,canvas.width-1,canvas.height-1);
+
+    const padL=56, padR=12, padT=14, padB=28;
+    const W = canvas.width - padL - padR;
+    const H = canvas.height - padT - padB;
+
+    // axes
+    ctx.strokeStyle="#cfd3dd";
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT+H);
+    ctx.lineTo(padL+W, padT+H);
+    ctx.stroke();
+
+    ctx.fillStyle="#333";
+    ctx.font="12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.fillText("Trend plot (eGFR/Cr/CRP/PCT)", padL, 12);
+
+    if (!tl.length) {
+      ctx.fillStyle="#666";
+      ctx.fillText("No timeline points yet. Save at least 1 point.", padL, padT + H/2);
+      return;
+    }
+
+    // choose series based on availability
+    const series = [
+      { key:"egfr", name:"eGFR", unit:"", color:"#111" },
+      { key:"creat", name:"Cr", unit:"", color:"#2b5" },
+      { key:"crp", name:"CRP", unit:"", color:"#b70" },
+      { key:"pct", name:"PCT", unit:"", color:"#b03" },
+      { key:"risk", name:"Risk", unit:"/20", color:"#06c" }
+    ];
+
+    // x positions equally spaced
+    const n = tl.length;
+    const xs = tl.map((_,i)=> padL + (n===1 ? W/2 : (i*(W/(n-1)))));
+
+    // y scaling per series (independent scaling to fit chart)
+    // draw legend
+    let lx = padL, ly = padT+H+22;
+    ctx.font="11px system-ui";
+    series.forEach(s=>{
+      ctx.fillStyle=s.color;
+      ctx.fillRect(lx, ly-9, 10, 10);
+      ctx.fillStyle="#333";
+      ctx.fillText(s.name, lx+14, ly);
+      lx += 68;
+    });
+
+    // helper to plot one series with auto scale
+    function plotSeries(s) {
+      const vals = tl.map(p => Number(p[s.key]));
+      const good = vals.filter(v => isFinite(v));
+      if (good.length < 2) return;
+
+      let vmin = Math.min(...good);
+      let vmax = Math.max(...good);
+      if (vmin === vmax) { vmin -= 1; vmax += 1; }
+
+      // ticks (left labels show eGFR scale only if series is egfr; otherwise skip labels)
+      if (s.key === "egfr") {
+        ctx.fillStyle="#444";
+        ctx.font="11px system-ui";
+        for (let t=0;t<=4;t++){
+          const y = padT + (H * (t/4));
+          ctx.strokeStyle="#f0f2f7";
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL+W, y); ctx.stroke();
+          const val = vmax - (t/4)*(vmax-vmin);
+          ctx.fillText(val.toFixed(0), 8, y+4);
+        }
+      }
+
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let started=false;
+      vals.forEach((v,i)=>{
+        if (!isFinite(v)) return;
+        const x = xs[i];
+        const y = padT + H * (1 - (v - vmin)/(vmax - vmin));
+        if (!started){ ctx.moveTo(x,y); started=true; }
+        else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+
+      // dots
+      ctx.fillStyle = s.color;
+      vals.forEach((v,i)=>{
+        if (!isFinite(v)) return;
+        const x = xs[i];
+        const y = padT + H * (1 - (v - vmin)/(vmax - vmin));
+        ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+      });
+    }
+
+    series.forEach(plotSeries);
+
+    // x labels (dates)
+    ctx.fillStyle="#444";
+    ctx.font="10px system-ui";
+    tl.forEach((p,i)=>{
+      const x = xs[i];
+      const txt = String(p.date).slice(5);
+      ctx.save();
+      ctx.translate(x, padT+H+14);
+      ctx.rotate(-0.7);
+      ctx.fillText(txt, -10, 0);
+      ctx.restore();
+    });
+  }
+
+  // ---------------------------
+  // Encrypted local storage (form save/load)
+  // ---------------------------
+  const ENC_FORM_KEY = "kidney_triage_enc_form_v2";
+
+  function b64encode(bytes) {
+    let bin = "";
+    bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin);
+  }
+  function b64decode(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  async function deriveAesKey(passphrase, saltBytes) {
+    const passBytes = new TextEncoder().encode(passphrase);
+    const keyMaterial = await crypto.subtle.importKey("raw", passBytes, "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: saltBytes, iterations: 150000, hash: "SHA-256" },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function encryptToLocalStorage(storageKey, passphrase, obj) {
+    if (!passphrase || passphrase.length < 6) throw new Error("Passphrase too short (min 6 chars).");
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveAesKey(passphrase, salt);
+    const plaintext = new TextEncoder().encode(JSON.stringify(obj));
+    const cipherbuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+    const cipher = new Uint8Array(cipherbuf);
+
+    localStorage.setItem(storageKey, JSON.stringify({
+      v: 2,
+      salt: b64encode(salt),
+      iv: b64encode(iv),
+      cipher: b64encode(cipher)
+    }));
+  }
+
+  async function decryptFromLocalStorage(storageKey, passphrase) {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    const salt = b64decode(payload.salt);
+    const iv = b64decode(payload.iv);
+    const cipher = b64decode(payload.cipher);
+    const key = await deriveAesKey(passphrase, salt);
+    const plainbuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, cipher);
+    const plaintext = new TextDecoder().decode(plainbuf);
+    return JSON.parse(plaintext);
+  }
+
+  function fillForm(d) {
+    if (!d) return;
+    $("brandSelect").value = d.brand || "bubulizer";
+    $("country").value = d.country || "NG";
+    $("modeSelect").value = d.mode || "patient";
+    applyBranding(); applyCountry(); applyMode();
+
+    $("age").value = isFinite(d.age) ? d.age : "";
+    $("sex").value = d.sex || "Male";
+    $("notes").value = d.notes || "";
+
+    // symptoms
+    const sx = ["fever","lowbp","sob","confusion","itch","rash","insomnia","urine","pain","ed"];
+    sx.forEach(k=>{
+      const id = "sx_" + k;
+      if ($(id)) $(id).checked = !!d["sx_" + k];
+    });
+
+    // vitals
+    $("temp").value = isFinite(d.temp) ? d.temp : "";
+    $("bp").value = d.bp || "";
+    $("hr").value = isFinite(d.hr) ? d.hr : "";
+    $("rr").value = isFinite(d.rr) ? d.rr : "";
+    $("spo2").value = isFinite(d.spo2) ? d.spo2 : "";
+
+    // labs
+    const nums = ["egfr","creat","urea","bicarb","wbc","hb","plt","eos","na","k","cl","acr","crp","pct","bili","alp"];
+    nums.forEach(f=> { if ($(f)) $(f).value = isFinite(d[f]) ? d[f] : ""; });
+    if ($("altast")) $("altast").value = d.altast || "";
+
+    // urine
+    $("u_protein").value = d.u_protein || "";
+    $("u_blood").value = d.u_blood || "";
+
+    // culture
+    $("org").value = d.org || "";
+    if ($("bc_repeat")) $("bc_repeat").value = d.bc_repeat || "";
+    if ($("bc_spec")) $("bc_spec").value = d.bc_spec || "";
+    if ($("abx")) $("abx").value = d.abx || "";
+  }
+
+  // ---------------------------
+  // Backend GPT proxy call (no keys in browser)
+  // ---------------------------
+  async function askProxy() {
+    const mode = $("modeSelect").value;
+    if (mode !== "doctor") {
+      alert("Switch to Doctor mode to use proxy call.");
+      return;
+    }
+
+    const proxyUrl = $("proxyUrl").value.trim();
+    if (!proxyUrl) { alert("Enter your backend proxy URL."); return; }
+
+    const { d, risk } = analyze();
+    const prompt = buildSummary(d, risk);
+
+    $("proxyReply").textContent = "Calling backend proxy…";
+    try {
+      const res = await fetch(proxyUrl, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({
+          country: d.country,
+          brand: d.brand,
+          mode: d.mode,
+          prompt
+        })
+      });
+      const data = await res.json();
+      $("proxyReply").textContent = data.reply || JSON.stringify(data, null, 2);
+    } catch (e) {
+      $("proxyReply").textContent = "Proxy call failed: " + (e?.message || String(e));
+    }
+  }
+
+  // ---------------------------
+  // PWA install helper
+  // ---------------------------
+  let deferredPrompt;
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+  $("installBtn").addEventListener("click", async () => {
+    if(!deferredPrompt){
+      alert("On mobile: browser menu → Add to Home Screen.");
+      return;
+    }
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+
+  // ---------------------------
+  // Buttons
+  // ---------------------------
+  $("analyzeBtn").addEventListener("click", () => { analyze(); });
+  $("pdfBtn").addEventListener("click", () => window.print());
+
+  $("copyBtn").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("output").textContent); alert("Copied summary."); }
+    catch { alert("Copy failed. Select text manually and copy."); }
+  });
+
+  $("resetBtn").addEventListener("click", () => location.reload());
+
+  $("loadExampleBtn").addEventListener("click", () => {
+    // Demo based on your earlier values (educational)
+    $("modeSelect").value = "doctor";
+    applyMode();
+
+    $("age").value="60"; $("sex").value="Male";
+    $("egfr").value="84"; $("creat").value="1.10";
+    $("urea") && ($("urea").value="14.4");
+    $("bicarb") && ($("bicarb").value="20");
+    $("na") && ($("na").value="136.6");
+    $("k") && ($("k").value="3.91");
+    $("cl") && ($("cl").value="102.5");
+    $("wbc").value="7.6"; $("hb").value="13.0"; $("plt").value="299"; $("eos").value="7.0";
+    $("org").value="Staphylococcus spp.";
+    $("bc_repeat") && ($("bc_repeat").value="No");
+    $("bc_spec") && ($("bc_spec").value="Not speciated");
+    $("sx_itch").checked=true; $("sx_insomnia").checked=true;
+    $("sx_ed") && ($("sx_ed").checked=true);
+    $("notes").value="Itching stopped for now; infection not yet treated; insomnia; erectile changes. (Demo)";
+
+    $("recDate").value = getTodayISO();
+    analyze();
+    drawTrends();
+  });
+
+  // Timeline
+  $("recDate").value = getTodayISO();
+  $("savePointBtn").addEventListener("click", savePoint);
+  $("plotBtn").addEventListener("click", drawTrends);
+  $("clearTimelineBtn").addEventListener("click", clearTimeline);
+
+  // Encrypted storage
+  $("saveEncBtn").addEventListener("click", async () => {
+    try {
+      const pass = $("passphrase").value;
+      const d = collectData();
+      d.__savedAt = new Date().toISOString();
+      await encryptToLocalStorage(ENC_FORM_KEY, pass, d);
+      alert("Saved (encrypted) to this device.");
+    } catch (e) {
+      alert("Save failed: " + (e?.message || String(e)));
+    }
+  });
+
+  $("loadEncBtn").addEventListener("click", async () => {
+    try {
+      const pass = $("passphrase").value;
+      const d = await decryptFromLocalStorage(ENC_FORM_KEY, pass);
+      if (!d) { alert("No saved data found."); return; }
+      fillForm(d);
+      analyze();
+      alert("Loaded (decrypted) from this device.");
+    } catch (e) {
+      alert("Load failed: " + (e?.message || String(e)));
+    }
+  });
+
+  $("clearEncBtn").addEventListener("click", () => {
+    localStorage.removeItem(ENC_FORM_KEY);
+    alert("Cleared saved encrypted form data.");
+  });
+
+  // Proxy GPT
+  $("askProxyBtn").addEventListener("click", askProxy);
+
+  // Live toggles
+  $("brandSelect").addEventListener("change", applyBranding);
+  $("country").addEventListener("change", applyCountry);
+  $("modeSelect").addEventListener("change", applyMode);
+
+  // Init
+  applyBranding();
+  applyCountry();
+  applyMode();
+  setRiskUI(0);
+  drawTrends();
+
+})();
+</script>
+
+</body>
+</html>

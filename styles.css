@@ -1,0 +1,143 @@
+/* BUBULIZER Kidney Triage PWA — styles.css */
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:#f6f7fb; color:#111;
+}
+
+.wrap{ max-width:1150px; margin:0 auto; padding:16px 12px 64px; }
+
+.hdr{
+  position: sticky; top:0; z-index:10;
+  background: rgba(246,247,251,.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e7e7ef;
+}
+.hdrRow{
+  max-width:1150px; margin:0 auto; padding:10px 12px;
+  display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+}
+
+.brandLeft{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.logo{ height:40px; width:auto; border-radius:10px; }
+.brandText{ max-width: 78ch; }
+.titleLine{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+h1{ margin:0; font-size: clamp(1.05rem, 2.6vw, 1.45rem); }
+.sub{ margin:6px 0 0; color:#333; line-height:1.35; font-size:.95rem; }
+
+.hdrControls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+
+.ctl{
+  width:100%; padding:10px;
+  border-radius:12px; border:1px solid #d9d9e6;
+  background:#fff; font-size:.95rem;
+}
+textarea.ctl{ resize:vertical; min-height:86px; }
+
+.grid{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+@media (min-width: 980px){ .grid{ grid-template-columns:1fr 1fr; } }
+
+.card{
+  background:#fff; border:1px solid #e7e7ef;
+  border-radius:16px; padding:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
+
+.card h2{ margin:0 0 10px; font-size:1.05rem; }
+label{ display:block; font-size:.9rem; margin:10px 0 6px; color:#222; }
+
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+@media (max-width:560px){
+  .row, .row3{ grid-template-columns:1fr; }
+  .hdr{ position:static; backdrop-filter:none; }
+}
+
+.btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.btn{
+  border:0; border-radius:14px; padding:10px 12px;
+  background:#111; color:#fff; font-weight:650; cursor:pointer;
+}
+.btn.secondary{ background:#fff; color:#111; border:1px solid #d9d9e6; }
+.btn.ghost{ background:transparent; color:#111; border:1px dashed #d9d9e6; }
+.btn:active{ transform: translateY(1px); }
+
+.seg{ display:flex; border:1px solid #d9d9e6; border-radius:14px; overflow:hidden; }
+.segBtn{
+  border:0; padding:10px 12px; cursor:pointer; background:#fff; color:#111; font-weight:650;
+}
+.segBtn.isActive{ background:#111; color:#fff; }
+
+.pill{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid #dde; background:#eef;
+  font-size:.85rem;
+}
+.warn{ background:#fff6e5; border-color:#ffd7a2; }
+.ok{ background:#e9f7ef; border-color:#bfe6cd; }
+.danger{ background:#ffe9ea; border-color:#ffb7bd; }
+
+.hr{ height:1px; background:#eee; margin:12px 0; }
+.tiny{ font-size:.85rem; line-height:1.35; }
+.muted{ color:#444; }
+
+.out{
+  white-space:pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size:.9rem; line-height:1.35;
+}
+
+/* Risk bar */
+.riskBox{ display:flex; flex-direction:column; gap:8px; }
+.riskRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.meter{
+  width:100%; height:12px; border-radius:999px;
+  background:#eee; overflow:hidden; border:1px solid #e3e3ea;
+}
+.meter > div{ height:100%; width:0%; background:#111; transition: width .25s ease; }
+
+/* Checkbox label styling */
+.chk{ display:flex; gap:8px; align-items:flex-start; margin:4px 0; font-size:.92rem; }
+.chk input{ margin-top: 3px; }
+
+/* Gate overlays */
+.gate{
+  position: fixed; inset:0; z-index: 50;
+  display:none;
+  place-items:center;
+  background: rgba(17,17,17,.55);
+  padding: 18px;
+}
+.gate.isOpen{ display:grid; }
+.gateCard{
+  width: min(820px, 100%);
+  background:#fff;
+  border:1px solid #e7e7ef;
+  border-radius:18px;
+  box-shadow:0 16px 48px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+.gateHead{ padding:14px; border-bottom:1px solid #eee; background:#f6f7fb; }
+.gateTitle{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.gateTitle h2{ margin:0; font-size:1.1rem; }
+.gateBody{ padding:14px; }
+.gateBtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+
+.pinBox{ display:block; }
+
+canvas{ width:100%; height:auto; border-radius:14px; border:1px solid #e7e7ef; background:#fff; }
+
+/* Print */
+@media print{
+  .noPrint, header{ display:none !important; }
+  body{ background:#fff; }
+  .card{ box-shadow:none; }
+  .wrap{ padding:0; max-width:100%; }
+  .gate{ display:none !important; }
+}

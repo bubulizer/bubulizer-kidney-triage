@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111111" />
+  <title>Kidney + Infection First-Aid Triage Helper — BUBULIZER</title>
+
+  <!-- PWA / ICONS (place these files beside index.html) -->
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Sticky header -->
+  <header class="hdr noPrint">
+    <div class="hdrRow">
+      <div class="brandLeft">
+        <img class="logo" src="apple-touch-icon.png" alt="BUBULIZER logo">
+        <div class="brandText">
+          <div class="titleLine">
+            <h1 id="appTitle">Kidney + Infection First-Aid Triage</h1>
+            <span class="pill warn">Educational</span>
+            <span class="pill" id="brandTag">BUBULIZER Solutions</span>
+            <span class="pill" id="countryPill">NG</span>
+          </div>
+          <p class="sub">
+            Mobile-first, Africa-appropriate decision-support for symptoms + labs. <b>No prescriptions.</b>
+            If danger signs appear, go to the nearest hospital.
+          </p>
+        </div>
+      </div>
+
+      <div class="hdrControls">
+        <div class="seg" role="tablist" aria-label="Mode selector">
+          <button id="modePatientBtn" class="segBtn isActive" type="button">Patient</button>
+          <button id="modeDoctorBtn" class="segBtn" type="button">Doctor</button>
+        </div>
+
+        <select id="brandSelect" class="ctl" title="Brand">
+          <option value="bubulizer">BUBULIZER Solutions</option>
+          <option value="drpius">Dr. Pius Erheyovwe Bubu</option>
+        </select>
+
+        <select id="country" class="ctl" title="Country context">
+          <option value="NG">🇳🇬 Nigeria</option>
+          <option value="UG">🇺🇬 Uganda</option>
+          <option value="KE">🇰🇪 Kenya</option>
+        </select>
+
+        <select id="lang" class="ctl" title="Language">
+          <option value="en">EN</option>
+          <option value="sw">SW</option>
+          <option value="fr">FR</option>
+        </select>
+
+        <button id="installBtn" class="btn secondary" type="button">Install</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Disclaimer gate (first launch) -->
+    <section id="disclaimerGate" class="gate" aria-hidden="true">
+      <div class="gateCard">
+        <div class="gateHead">
+          <div class="gateTitle">
+            <span class="pill warn">Required</span>
+            <h2>Safety Disclaimer</h2>
+          </div>
+          <p class="tiny">
+            This tool is for education and triage support only. It is <b>not</b> a diagnosis and does <b>not</b> prescribe treatment.
+            If you have severe symptoms, seek urgent care immediately.
+          </p>
+        </div>
+
+        <div class="gateBody">
+          <ul class="tiny">
+            <li>No antibiotic prescriptions or dosing advice.</li>
+            <li>Outputs can be wrong if labs are incomplete/incorrect.</li>
+            <li>Emergency signs: confusion, fainting/very low BP, breathing difficulty, chest pain, very low urine output, rapidly spreading rash, SpO₂ &lt; 94%.</li>
+            <li>If blood culture reports <b>Staphylococcus</b>, clinician should confirm contamination vs true infection (repeat culture + speciation).</li>
+          </ul>
+
+          <label class="chk">
+            <input id="agreeChk" type="checkbox">
+            <span>I understand and I will seek clinical care for red flags.</span>
+          </label>
+
+          <div class="gateBtns">
+            <button id="agreeBtn" class="btn" type="button" disabled>Continue</button>
+            <button id="printDisclaimerBtn" class="btn secondary" type="button">Print</button>
+          </div>
+
+          <p class="tiny muted">
+            Tip: You can export the generated summary as PDF and share with a clinician.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PIN gate (Doctor mode) -->
+    <section id="pinGate" class="gate" aria-hidden="true">
+      <div class="gateCard">
+        <div class="gateHead">
+          <div class="gateTitle">
+            <span class="pill warn">Doctor mode</span>
+            <h2>PIN Required</h2>
+          </div>
+          <p class="tiny">
+            Doctor mode exposes extra inputs (more detailed labs, culture logic, and risk signals). Keep it locked on shared devices.
+          </p>
+        </div>
+
+        <div class="gateBody">
+          <div id="pinSetup" class="pinBox">
+            <p class="tiny"><b>First time?</b> Set a 4–8 digit PIN.</p>
+            <div class="row">
+              <div>
+                <label>New PIN</label>
+                <input id="newPin" class="ctl" inputmode="numeric" autocomplete="new-password" placeholder="4–8 digits">
+              </div>
+              <div>
+                <label>Confirm PIN</label>
+                <input id="newPin2" class="ctl" inputmode="numeric" autocomplete="new-password" placeholder="repeat">
+              </div>
+            </div>
+            <div class="gateBtns">
+              <button id="setPinBtn" class="btn" type="button">Set PIN</button>
+              <button id="cancelPinBtn1" class="btn secondary" type="button">Back</button>
+            </div>
+            <p id="pinSetupMsg" class="tiny muted"></p>
+          </div>
+
+          <div id="pinUnlock" class="pinBox" hidden>
+            <p class="tiny">Enter your PIN to unlock Doctor mode.</p>
+            <div class="row">
+              <div>
+                <label>PIN</label>
+                <input id="pinInput" class="ctl" inputmode="numeric" autocomplete="current-password" placeholder="PIN">
+              </div>
+              <div>
+                <label>&nbsp;</label>
+                <button id="unlockBtn" class="btn" type="button" style="width:100%;">Unlock</button>
+              </div>
+            </div>
+            <div class="gateBtns">
+              <button id="forgotPinBtn" class="btn ghost" type="button">Reset PIN (device)</button>
+              <button id="cancelPinBtn2" class="btn secondary" type="button">Back</button>
+            </div>
+            <p id="pinUnlockMsg" class="tiny muted"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content grid -->
+    <div class="grid">
+      <section class="card">
+        <h2>Patient & Symptoms</h2>
+        <div class="row">
+          <div>
+            <label>Age (years)</label>
+            <input id="age" class="ctl" type="number" min="0" value="60">
+          </div>
+          <div>
+            <label>Sex</label>
+            <select id="sex" class="ctl">
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Symptoms (tick all that apply)</label>
+        <div class="row3">
+          <label class="chk"><input type="checkbox" id="sx_fever"><span>Fever / chills</span></label>
+          <label class="chk"><input type="checkbox" id="sx_lowbp"><span>Dizziness / fainting</span></label>
+          <label class="chk"><input type="checkbox" id="sx_sob"><span>Shortness of breath</span></label>
+          <label class="chk"><input type="checkbox" id="sx_confusion"><span>Confusion</span></label>
+          <label class="chk"><input type="checkbox" id="sx_itch"><span>Itching</span></label>
+          <label class="chk"><input type="checkbox" id="sx_rash"><span>Rash / swelling</span></label>
+          <label class="chk"><input type="checkbox" id="sx_insomnia"><span>Insomnia</span></label>
+          <label class="chk"><input type="checkbox" id="sx_urine"><span>Reduced urine / dark urine</span></label>
+          <label class="chk"><input type="checkbox" id="sx_pain"><span>Severe pain</span></label>
+          <label class="chk"><input type="checkbox" id="sx_ed"><span>Erectile issues</span></label>
+        </div>
+
+        <label>Notes (timeline, drugs, herbs, allergies)</label>
+        <textarea id="notes" class="ctl" placeholder="Example: itching improved; poor sleep; took antibiotics last week; used herbal mixture; any drug allergy?"></textarea>
+
+        <div class="hr"></div>
+        <p class="tiny">
+          ⚠️ Emergency signs: persistent high fever, confusion, fainting/very low BP, breathing difficulty, chest pain,
+          very low urine output, rapidly spreading rash, SpO₂ &lt; 94%.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Vitals (Optional but Powerful)</h2>
+        <div class="row3">
+          <div><label>Temperature (°C)</label><input id="temp" class="ctl" type="number" step="0.1" placeholder="36.8"></div>
+          <div><label>Blood Pressure (mmHg)</label><input id="bp" class="ctl" placeholder="120/80"></div>
+          <div><label>Heart Rate (bpm)</label><input id="hr" class="ctl" type="number" placeholder="78"></div>
+        </div>
+        <div class="row3">
+          <div><label>Respiratory Rate (/min)</label><input id="rr" class="ctl" type="number" placeholder="16"></div>
+          <div><label>Oxygen Saturation (%)</label><input id="spo2" class="ctl" type="number" placeholder="98"></div>
+          <div></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2>Risk Score (educational)</h2>
+        <div class="riskBox">
+          <div class="riskRow">
+            <b id="riskLabel">Not calculated</b>
+            <span class="pill" id="riskPoints">0 / 20</span>
+          </div>
+          <div class="meter" aria-label="Risk score bar">
+            <div id="riskBar"></div>
+          </div>
+          <div class="tiny">
+            <span class="pill ok">0–4 Low</span>
+            <span class="pill warn">5–9 Moderate</span>
+            <span class="pill danger">10+ High</span>
+          </div>
+          <p class="tiny muted">Conservative screening score to highlight urgency signals. Not a diagnosis.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Key Blood & Kidney Labs</h2>
+        <div class="row">
+          <div><label>eGFR (mL/min/1.73m²)</label><input id="egfr" class="ctl" type="number" step="0.1" value="84"></div>
+          <div><label>Creatinine (mg/dL)</label><input id="creat" class="ctl" type="number" step="0.01" value="1.10"></div>
+        </div>
+        <div class="row">
+          <div><label>Urea (mg/dL)</label><input id="urea" class="ctl" type="number" step="0.1" placeholder="14.4"></div>
+          <div><label>Bicarbonate (mmol/L)</label><input id="bicarb" class="ctl" type="number" step="0.1" placeholder="20"></div>
+        </div>
+        <div class="row">
+          <div><label>WBC (×10⁹/L)</label><input id="wbc" class="ctl" type="number" step="0.1" value="7.6"></div>
+          <div><label>Hemoglobin (g/dL)</label><input id="hb" class="ctl" type="number" step="0.1" value="13.0"></div>
+        </div>
+        <div class="row">
+          <div><label>Platelets (×10⁹/L)</label><input id="plt" class="ctl" type="number" step="1" value="299"></div>
+          <div><label>Eosinophils (%)</label><input id="eos" class="ctl" type="number" step="0.1" value="7.0"></div>
+        </div>
+        <div class="row3 doctorOnly" hidden>
+          <div><label>Sodium (mmol/L)</label><input id="na" class="ctl" type="number" step="0.1" placeholder="136.6"></div>
+          <div><label>Potassium (mmol/L)</label><input id="k" class="ctl" type="number" step="0.01" placeholder="3.91"></div>
+          <div><label>Chloride (mmol/L)</label><input id="cl" class="ctl" type="number" step="0.1" placeholder="102.5"></div>
+        </div>
+      </section>
+
+      <section class="card doctorOnly" hidden>
+        <h2>Urinalysis & Albuminuria</h2>
+        <div class="row3">
+          <div>
+            <label>Urine Protein</label>
+            <select id="u_protein" class="ctl">
+              <option value=""></option>
+              <option>Negative</option><option>Trace</option><option>+</option><option>++</option><option>+++</option>
+            </select>
+          </div>
+          <div>
+            <label>Urine Blood</label>
+            <select id="u_blood" class="ctl">
+              <option value=""></option>
+              <option>Negative</option><option>Trace</option><option>+</option><option>++</option>
+            </select>
+          </div>
+          <div>
+            <label>Urine ACR (mg/g)</label>
+            <input id="acr" class="ctl" type="number" step="0.1" placeholder="12">
+          </div>
+        </div>
+        <p class="tiny muted">ACR ≥ 30 mg/g suggests kidney damage even if eGFR looks “okay”.</p>
+      </section>
+
+      <section class="card doctorOnly" hidden>
+        <h2>Inflammatory Markers</h2>
+        <div class="row">
+          <div><label>CRP (mg/L)</label><input id="crp" class="ctl" type="number" step="0.1" placeholder="5"></div>
+          <div><label>Procalcitonin (ng/mL)</label><input id="pct" class="ctl" type="number" step="0.01" placeholder="0.08"></div>
+        </div>
+        <p class="tiny muted">Interpret with symptoms/vitals; do not self-treat.</p>
+      </section>
+
+      <section class="card doctorOnly" hidden>
+        <h2>LFTs (itching workup)</h2>
+        <div class="row3">
+          <div><label>Total Bilirubin (mg/dL)</label><input id="bili" class="ctl" type="number" step="0.01" placeholder="0.8"></div>
+          <div><label>ALP (U/L)</label><input id="alp" class="ctl" type="number" placeholder="90"></div>
+          <div><label>ALT / AST (U/L)</label><input id="altast" class="ctl" placeholder="22 / 24"></div>
+        </div>
+      </section>
+
+      <section class="card doctorOnly" hidden>
+        <h2>Blood Culture Follow‑up</h2>
+        <label>Initial organism</label>
+        <input id="org" class="ctl" value="Staphylococcus spp.">
+        <div class="row">
+          <div>
+            <label>Repeated?</label>
+            <select id="bc_repeat" class="ctl">
+              <option value=""></option>
+              <option>No</option>
+              <option>Yes – still positive</option>
+              <option>Yes – now negative</option>
+            </select>
+          </div>
+          <div>
+            <label>Speciation</label>
+            <select id="bc_spec" class="ctl">
+              <option value=""></option>
+              <option>Not speciated</option>
+              <option>Staphylococcus aureus</option>
+              <option>Coagulase-negative Staph (CoNS)</option>
+            </select>
+          </div>
+        </div>
+        <label>Antibiogram (S/R summary if available)</label>
+        <textarea id="abx" class="ctl" placeholder="Sensitive: …  Resistant: …"></textarea>
+        <div class="hr"></div>
+        <div id="countryHints" class="tiny"></div>
+      </section>
+
+      <section class="card" style="grid-column:1/-1;">
+        <h2>Results</h2>
+        <div id="badges"></div>
+        <div class="hr"></div>
+
+        <div class="btns noPrint" style="margin-top:0;">
+          <button id="analyzeBtn" class="btn" type="button">Analyze</button>
+          <button id="loadExampleBtn" class="btn secondary" type="button">Load Example</button>
+          <button id="copyBtn" class="btn secondary" type="button">Copy Summary</button>
+          <button id="pdfBtn" class="btn secondary" type="button">Export PDF</button>
+          <button id="lockBtn" class="btn ghost" type="button" title="Lock doctor mode">Lock</button>
+        </div>
+
+        <div class="hr"></div>
+        <div id="output" class="out">Enter data and click Analyze.</div>
+
+        <div class="hr"></div>
+        <div class="tiny muted">
+          Built by <b id="builtBy">BUBULIZER Solutions</b>. This tool avoids prescribing antibiotics by design.
+        </div>
+      </section>
+
+      <section class="card doctorOnly noPrint" hidden>
+        <h2>Optional GPT Hook (backend proxy recommended)</h2>
+        <p class="tiny muted">
+          For production: never put API keys in the browser. Use a backend proxy (FastAPI/Node) and audit logs.
+        </p>
+        <div class="row">
+          <div>
+            <label>Proxy endpoint</label>
+            <input id="proxyUrl" class="ctl" placeholder="https://your-domain.com/api/gpt">
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="askGptBtn" class="btn secondary" type="button" style="width:100%;">Ask GPT (safe)</button>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div id="gptReply" class="out tiny">No GPT call made.</div>
+      </section>
+
+      <section class="card doctorOnly" hidden>
+        <h2>Timeline & Trend (Doctor mode)</h2>
+        <p class="tiny muted">Add multiple dated entries and visualize trends (eGFR/Cr).</p>
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input id="t_date" class="ctl" type="date">
+          </div>
+          <div>
+            <label>Label (optional)</label>
+            <input id="t_label" class="ctl" placeholder="e.g., Day 3 follow-up">
+          </div>
+        </div>
+        <div class="row3">
+          <div><label>eGFR</label><input id="t_egfr" class="ctl" type="number" step="0.1"></div>
+          <div><label>Creatinine</label><input id="t_creat" class="ctl" type="number" step="0.01"></div>
+          <div><label>&nbsp;</label><button id="addPointBtn" class="btn secondary" type="button" style="width:100%;">Add</button></div>
+        </div>
+        <div class="hr"></div>
+        <canvas id="trendCanvas" width="900" height="260" aria-label="Trend chart"></canvas>
+        <div class="btns noPrint">
+          <button id="clearTimelineBtn" class="btn ghost" type="button">Clear timeline</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
